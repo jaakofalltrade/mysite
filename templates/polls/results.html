@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<h3>{{ question.question_text }}</h3>
+<canvas id="myChart" width="200" height="200"></canvas>
+<ul>
+{% for choice in question.choice_set.all %}
+    <li>{{ choice.choice_text }} -- {{ choice.votes }} vote{{ choice.votes|pluralize }}</li>
+{% endfor %}
+</ul>
+
+<a class="waves-effect waves-light btn blue lighten-2" href="{% url 'polls:detail' question.id %}">Vote again?</a>
+<a class="waves-effect waves-light btn red lighten-2" href="{% url 'polls:index'%}">Go back</a>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.min.js"></script>
+<script type="text/javascript">
+    $.get('{% url "polls:results" %}', function(data) {
+        var ctx = $("#myChart").get(0).getContext("2d");
+        new Chart(ctx, {
+            type: 'line', data: data
+        });
+    });
+</script>
+{% endblock %}
