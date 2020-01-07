@@ -1,9 +1,20 @@
 {% extends 'base.html' %}
 
+{% block title %}
+    {{ question.question_text }}
+{% endblock%}
+
 {% block content %}
 
 <h3>{{ question.question_text }}</h3>
-<canvas id="myChart" width="200" height="200"></canvas>
+<div class="row">
+    <div class="col s12">
+        <canvas id="myChart">
+            <strong>No votes yet</strong>
+        </canvas>
+    </div>
+</div>
+
 <ul>
 {% for choice in question.choice_set.all %}
     <li>{{ choice.choice_text }} -- {{ choice.votes }} vote{{ choice.votes|pluralize }}</li>
@@ -13,13 +24,46 @@
 <a class="waves-effect waves-light btn blue lighten-2" href="{% url 'polls:detail' question.id %}">Vote again?</a>
 <a class="waves-effect waves-light btn red lighten-2" href="{% url 'polls:index'%}">Go back</a>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.min.js"></script>
 <script type="text/javascript">
-    $.get('{% url "polls:results" %}', function(data) {
-        var ctx = $("#myChart").get(0).getContext("2d");
-        new Chart(ctx, {
-            type: 'line', data: data
+$.ajax({
+    method: "GET",
+    url: '{% url "polls:vote_data" question.id %}',
+    success: function(data) {
+        console.log(data)
+        var ctx = document.getElementById('myChart').getContext('2d');
+        var myChart = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: data.labels,
+                datasets: [{
+                    label: '# of Votes',
+                    data: data.votes,
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.2)',
+                        'rgba(54, 162, 235, 0.2)',
+                        'rgba(255, 206, 86, 0.2)',
+                        'rgba(75, 192, 192, 0.2)',
+                        'rgba(153, 102, 255, 0.2)',
+                        'rgba(255, 159, 64, 0.2)'
+                    ]
+                }]
+            },
+            options: {
+                scales: {
+                    yAxes: [{
+                        ticks: {
+                            beginAtZero: true
+                        }
+                    }]
+                }
+            }
         });
-    });
+    },
+    error: function(error_data) {
+        console.log(error_data)
+    }
+})
 </script>
 {% endblock %}

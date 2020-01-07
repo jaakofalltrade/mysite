@@ -3,6 +3,8 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.urls import reverse
 from django.views import generic
 from django.utils import timezone
+from django.http import JsonResponse
+from django.forms.models import model_to_dict
 
 
 from .models import Choice, Question
@@ -58,15 +60,9 @@ def get_queryset(self):
     ).order_by('-pub_date')[:5]
 
 def vote_data(request, question_id):
-    question = get_object_or_404(Question, pk=question_id)
-    try:
-        selected_choice = question.choice_set.get(pk=request.get['choice'])
-    except (KeyError, Choice.DoesNotExist):
-        return render(request, 'polls/detail.html', {
-            'question': question,
-            'error_message': "You didn't select a choice.",
-        })
-    else:
-        selected_choice.votes += 1
-        selected_choice.save()
-        return HttpResponseRedirect(reverse('polls:results', args=(question.id,)))
+    choices = Choice.objects.filter(question=question_id).values()
+    data = {
+        'labels': [x['choice_text'] for x in choices],
+        'votes': [x['votes'] for x in choices],
+    }
+    return JsonResponse(data)
